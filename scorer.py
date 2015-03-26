@@ -21,10 +21,16 @@ interrupted=False
 print("Fetching matches..")
 while True:
   try:
-    r = requests.get(url)
-    while r.status_code is not 200:
-      sleep(2)
-      r = requests.get(url)
+    print("fetching...")
+    try:
+      r = requests.get(url,timeout=5)
+      while r.status_code is not 200:
+        print("Error. Trying again")
+        sleep(2)
+        r = requests.get(url,timeout=10)
+    except requests.exceptions.Timeout:
+      print("trouble fetching. will retry next time")
+      continue
     soup = BeautifulSoup(r.text)
     data = soup.find_all("description")
     if match == 0:
@@ -39,11 +45,14 @@ while True:
     if newscore != score:
       score = newscore
       sendmessage("Score", score)
-    sleep(15)
+    else:
+      print(newscore)
+    sleep(30)
 
   except KeyboardInterrupt:
     if interrupted:
       print("Bye bye")
+      Notify.uninit()
       break
     else:
       print("Press Ctrl+C again to quit")
